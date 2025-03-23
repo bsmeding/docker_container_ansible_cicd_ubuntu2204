@@ -25,11 +25,11 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Upgrade pip and install Python packages
-RUN pip3 install --upgrade pip wheel \
-    && pip3 install --upgrade cryptography cffi \
-    && pip3 install mitogen jmespath \
-    && pip3 install --upgrade pywinrm \
-    && pip3 install $pip_packages
+RUN pip3 install --break-system-packages --upgrade pip wheel \
+    && pip3 install --break-system-packages --upgrade cryptography cffi \
+    && pip3 install --break-system-packages --upgrade mitogen jmespath \
+    && pip3 install --break-system-packages --upgrade pywinrm \
+    && pip3 install --break-system-packages $pip_packages
 
 # Set localhost Ansible inventory
 RUN mkdir -p /etc/ansible && \
