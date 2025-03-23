@@ -25,7 +25,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Upgrade pip and install Python packages
-RUN pip3 install --break-system-packages --upgrade pip wheel \
+RUN pip3 install --break-system-packages pip wheel \
     && pip3 install --break-system-packages --upgrade cryptography cffi \
     && pip3 install --break-system-packages --upgrade mitogen jmespath \
     && pip3 install --break-system-packages --upgrade pywinrm \
