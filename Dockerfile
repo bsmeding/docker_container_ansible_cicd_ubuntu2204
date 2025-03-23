@@ -3,7 +3,7 @@ LABEL maintainer="Bart Smeding"
 
 ENV container=docker
 ENV DEBIAN_FRONTEND=noninteractive
-ENV pip_packages "ansible==11.1.0 yamllint pynautobot pynetbox jmespath netaddr"
+ENV pip_packages "ansible==10.4.0 yamllint pynautobot pynetbox jmespath netaddr"
 
 # Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
