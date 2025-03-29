@@ -36,8 +36,12 @@ RUN sudo rm -rf /usr/lib/python3.12/EXTERNALLY-MANAGED
 # Add pip packages
 RUN pip3 install $pip_packages
 
-COPY initctl_faker .
-RUN chmod +x initctl_faker && rm -fr /sbin/initctl && ln -s /initctl_faker /sbin/initctl
+COPY initctl_faker /usr/local/bin/initctl_faker
+RUN chmod +x /usr/local/bin/initctl_faker && \
+    ls -l /sbin/initctl && \
+    rm -f /sbin/initctl && \
+    ln -s /usr/local/bin/initctl_faker /sbin/initctl && \
+    echo "Linked /sbin/initctl -> /usr/local/bin/initctl_faker"
 
 # Install Ansible inventory file.
 RUN mkdir -p /etc/ansible
