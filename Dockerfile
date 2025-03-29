@@ -1,43 +1,52 @@
 FROM ubuntu:22.04
 LABEL maintainer="Bart Smeding"
-
 ENV container=docker
+
 ENV DEBIAN_FRONTEND=noninteractive
+
 ENV pip_packages "ansible==10.4.0 yamllint pynautobot pynetbox jmespath netaddr"
 
-# Install dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    sudo \
-    python3 \
-    python3-venv \
-    python3-pip \
-    build-essential \
-    libffi-dev \
-    libssl-dev \
-    sshpass \
-    openssh-client \
-    rsync \
-    git \
-    cargo \
-    ca-certificates \
-    curl && \
-    rm -rf /var/lib/apt/lists/*
+# Install dependencies.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       apt-utils \
+       build-essential \
+       locales \
+       libffi-dev \
+       libssl-dev \
+       libyaml-dev \
+       python3-dev \
+       python3-setuptools \
+       python3-pip \
+       python3-yaml \
+       software-properties-common \
+       rsyslog systemd systemd-cron sudo iproute2 \
+    && apt-get clean \
+    && rm -Rf /var/lib/apt/lists/* \
+    && rm -Rf /usr/share/doc && rm -Rf /usr/share/man
+RUN sed -i 's/^\($ModLoad imklog\)/#\1/' /etc/rsyslog.conf
 
-# Create virtual environment
-RUN python3 -m venv /opt/venv
+# Set Locale
+RUN locale-gen en_US.UTF-8
 
-# Install Python packages inside venv
-RUN /opt/venv/bin/pip install --upgrade pip wheel \
- && /opt/venv/bin/pip install cryptography cffi mitogen jmespath pywinrm \
- && /opt/venv/bin/pip install $pip_packages
 
-# Set PATH to use virtualenv by default
-ENV PATH="/opt/venv/bin:$PATH"
+# Set system python to Externally managed
+RUN sudo rm -rf /usr/lib/python3.12/EXTERNALLY-MANAGED
 
-# Ansible inventory
-RUN mkdir -p /etc/ansible \
- && echo -e '[local]\nlocalhost ansible_connection=local' > /etc/ansible/hosts
+# Add pip packages
+RUN pip3 install $pip_packages
 
-VOLUME ["/sys/fs/cgroup"]
-ENTRYPOINT []
-CMD ["ansible", "--help"]
+COPY initctl_faker .
+RUN chmod +x initctl_faker && rm -fr /sbin/initctl && ln -s /initctl_faker /sbin/initctl
+
+# Install Ansible inventory file.
+RUN mkdir -p /etc/ansible
+RUN echo "[local]\nlocalhost ansible_connection=local" > /etc/ansible/hosts
+
+# Remove unnecessary getty and udev targets that result in high CPU usage when using
+# multiple containers with Molecule (https://github.com/ansible/molecule/issues/1104)
+RUN rm -f /lib/systemd/system/systemd*udev* \
+  && rm -f /lib/systemd/system/getty.target
+
+VOLUME ["/sys/fs/cgroup", "/tmp", "/run"]
+CMD ["/lib/systemd/systemd"]
